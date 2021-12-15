@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TagBrowser (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "TagBrowser (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

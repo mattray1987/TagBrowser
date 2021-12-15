@@ -1,0 +1,97 @@
+﻿<Window
+    x:Class="TagBrowser.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TagBrowser"
+    xmlns:models="using:TagBrowser.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{StaticResource RegionBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <MenuBar Grid.Row="0">
+            <MenuBar.Items>
+                <MenuBarItem Title="File">
+                    <MenuFlyoutItem Text="Load" Command="{x:Bind ViewModel.LoadFromDirectoryCommand}">
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="L"/>
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Text="Reload" Command="{x:Bind ViewModel.ReloadFromDirectoryCommand}" >
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="R"/>
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                </MenuBarItem>
+            </MenuBar.Items>
+        </MenuBar>
+        <StackPanel Grid.Row="1"
+                    Margin="10" 
+                    CornerRadius="2"
+                    BorderThickness="0,0,0,2">
+            <AutoSuggestBox PlaceholderText="Filter By Tag" 
+                        ItemsSource="{x:Bind ViewModel.FilteredTags, Mode=OneWay}"
+                        Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay}"
+                        TextChanged="{x:Bind ViewModel.TagTextChanged}"
+                        QuerySubmitted="{x:Bind ViewModel.TagQuerySubmitted}"
+                        SuggestionChosen="{x:Bind ViewModel.TagSuggestionChosen}"
+                        TextMemberPath="Name"
+                        HorizontalAlignment="Left"
+                        Width="300"
+                        Margin="5"
+                        BorderThickness="0">
+                <AutoSuggestBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:Tag">
+                        <TextBlock Text="{x:Bind Name}"/>
+                    </DataTemplate>
+                </AutoSuggestBox.ItemTemplate>
+            </AutoSuggestBox>
+        </StackPanel>
+        <ListView Grid.Row="2" 
+                  ItemsSource="{x:Bind ViewModel.FilteredStories, Mode=OneWay}" 
+                  SelectedItem="{x:Bind ViewModel.SelectedStory, Mode=TwoWay}"
+                  DoubleTapped="{x:Bind ViewModel.OpenStoryFile}"
+                  BorderThickness="0"
+                  x:Name="storyList">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:Story">
+                    <Grid Margin="10,10,10,0"
+                          BorderThickness="0,0,0,2">
+                        <Grid.ContextFlyout>
+                            <Flyout>
+                                <MenuFlyoutItem Text="Open Story" Click="MenuFlyoutItem_Click"/>
+                            </Flyout>
+                        </Grid.ContextFlyout>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind Name}" Margin="10,0,0,0"/>
+                        <ListView Grid.Row="1" SelectionMode="None" 
+                                  ItemsSource="{x:Bind Tags}" 
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollMode="Enabled"
+                                  BorderThickness="0,2,0,0">
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:Tag">
+                                    <TextBlock Text="{x:Bind Name}" Style="{StaticResource BodyTextBlockStyle}" />
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+        
+</Window>
