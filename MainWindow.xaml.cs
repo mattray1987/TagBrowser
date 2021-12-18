@@ -31,17 +31,12 @@ namespace TagBrowser
     /// </summary>
     public sealed partial class MainWindow : Window
     {
-        internal ObservableCollection<Story> AllStories = new();
+        internal ObservableCollection<AnnotatedFile> AllStories = new();
 
         public MainWindow()
         {
             this.InitializeComponent();
         }
         MainViewModel ViewModel => (Application.Current as App).ViewModel;
-
-        private void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.OpenStoryClick(sender,e);
-        }
     }
 }

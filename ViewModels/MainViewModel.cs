@@ -19,24 +19,35 @@ namespace TagBrowser.ViewModels
     public class MainViewModel : BindableBase
     {
         #region Fields
-        private ObservableCollection<Story> AllStories { get; set; } = new();
-        private ObservableCollection<Tag> AllTags { get; set; } = new();
-        private ObservableCollection<Story> filteredStories = new();
+        private AppData appData = new AppData();
+        private Project selectedProject;
+        private ObservableCollection<AnnotatedFile> filteredFiles = new();
         private ObservableCollection<Tag> filteredTags = new();
         private string searchTerm;
         private Tag selectedTag;
-        private Story selectedStory;
-        private StorageFolder lastFolder { get; set; }
+        private AnnotatedFile selectedFile;
+        private ObservableCollection<Project> projectFolders = new();
+        private StorageFolder selectedFolder { get; set; }
 
         #endregion
 
         #region Properties
-        public ObservableCollection<Story> FilteredStories
+        public ObservableCollection<Project> ProjectFolders { get { return projectFolders; } } 
+        public Project SelectedProject { 
+            get { return selectedProject; } 
+            set 
+            { 
+                SetProperty(ref selectedProject, value); 
+                FilterFilesByTag();
+                FilterTags();
+            } 
+        }
+        public ObservableCollection<AnnotatedFile> FilteredFiles
         {
-            get => filteredStories;
+            get => filteredFiles;
             set
             {
-                SetProperty(ref filteredStories, value);
+                SetProperty(ref filteredFiles, value);
             }
         }
         public ObservableCollection<Tag> FilteredTags
@@ -53,11 +64,12 @@ namespace TagBrowser.ViewModels
             set
             {
                 SetProperty(ref selectedTag, value);
-                FilterStoriesByTag();
+                FilterFilesByTag();
             }
         }
-        public ICommand LoadFromDirectoryCommand { get; set; }
-        public ICommand ReloadFromDirectoryCommand { get; set; }
+        public ICommand LoadWithPickerCommand { get; set; }
+        public ICommand ReloadProjectCommand { get; set; }
+        public ICommand SaveProjectCommand { get; set; }
         public string SearchTerm
         {
             get => searchTerm;
@@ -66,12 +78,12 @@ namespace TagBrowser.ViewModels
                 SetProperty(ref searchTerm, value);
             }
         }
-        public Story SelectedStory
+        public AnnotatedFile SelectedFile
         {
-            get => selectedStory;
+            get => selectedFile;
             set
             {
-                SetProperty(ref selectedStory, value);
+                SetProperty(ref selectedFile, value);
             }
         }
 
@@ -82,7 +94,7 @@ namespace TagBrowser.ViewModels
         {
             if (!string.IsNullOrWhiteSpace(SearchTerm))
             {
-                SelectedTag = AllTags.FirstOrDefault(s => s.Name.Equals(SearchTerm, StringComparison.OrdinalIgnoreCase));
+                SelectedTag = SelectedProject.ProjectTags.FirstOrDefault(s => s.Name.Equals(SearchTerm, StringComparison.OrdinalIgnoreCase));
             }
             else
             {
@@ -100,26 +112,26 @@ namespace TagBrowser.ViewModels
         {
             
         }
-        private void FilterStoriesByTag() 
+        private void FilterFilesByTag() 
         {
-            FilteredStories.Clear();
-            if (AllStories.Any())
+            FilteredFiles.Clear();
+            if (SelectedProject != null && SelectedProject.AnnotatedFiles.Any())
             {
                 if(SelectedTag != null)
                 {
-                    foreach(Story story in AllStories)
+                    foreach(AnnotatedFile file in SelectedProject.AnnotatedFiles)
                     {
-                        if (story.Tags.Contains(SelectedTag))
+                        if (file.ContainsTag(SelectedTag))
                         {
-                            FilteredStories.Add(story);
+                            FilteredFiles.Add(file);
                         }
                     }
                 }
                 else
                 {
-                    foreach(Story story in AllStories)
+                    foreach(AnnotatedFile file in SelectedProject.AnnotatedFiles)
                     {
-                        FilteredStories.Add(story);
+                        FilteredFiles.Add(file);
                     }
                 }
             } 
@@ -127,109 +139,107 @@ namespace TagBrowser.ViewModels
         private void FilterTags()
         {
             FilteredTags.Clear();
-            foreach(Tag tag in AllTags)
+            if(SelectedProject != null && SelectedProject.ProjectTags != null)
             {
-                if(tag.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                foreach (Tag tag in SelectedProject.ProjectTags)
                 {
-                    FilteredTags.Add(tag);
-                }
-            }
-        }
-        private async void LoadStoryFromFile(StorageFile file)
-        {
-            string pattern = @"[tT][aA][gG][sS]\s*\:(.*)";
-            Regex regex = new Regex(pattern);
-
-            if (file != null && file.FileType == ".txt")
-            {
-                Story story = new Story();
-                story.Name = file.DisplayName;
-                story.FilePath = file.Path;
-                string text = await FileIO.ReadTextAsync(file);
-                var match = regex.Match(text);
-                if (match.Success)
-                {
-                    string tagListString = match.Groups[1].Value;
-                    List<string> tagsList = tagListString.Split(',').Select(s => s.Trim()).ToList();
-                    foreach (string tagString in tagsList)
+                    if (tag.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!string.IsNullOrWhiteSpace(tagString))
-                        {
-                            Tag tag = AllTags.FirstOrDefault(s => s.Name.ToLowerInvariant() == tagString.ToLowerInvariant());
-                            if (tag == null)
-                            {
-                                tag = new Tag(tagString);
-                                AllTags.Add(tag);
-                            }
-                            story.Tags.Add(tag);
-                        }
+                        FilteredTags.Add(tag);
                     }
                 }
-                AllStories.Add(story);
-                FilteredStories.Add(story);
             }
         }
+       
         private async void LoadFromDirectoryPickerAsync()
         {
             StorageFolder selectedFolder = await FileFolderPicker.PickFolderDiaglogAsync();
             if (selectedFolder != null)
             {
-                // Save this for reloads
-                lastFolder = selectedFolder;
+                this.selectedFolder = selectedFolder;
 
-                // Clear out the old data if there is any
-                AllStories.Clear();
-                AllTags.Clear();
-                FilteredStories.Clear();
-                FilteredTags.Clear();
-
-                // Load in the new data from the selected folder
-                IReadOnlyList<StorageFile> storageFiles = await selectedFolder.GetFilesAsync();
-                foreach (StorageFile storageFile in storageFiles)
-                {
-                    if (storageFile != null && storageFile.FileType == ".txt")
-                    {
-                        LoadStoryFromFile(storageFile);
-                    } 
-                }
+                LoadProjectAsync();
             }
         }
 
-        private async void ReloadFromDirectory()
+        private async void LoadProjectAsync()
         {
-            if (lastFolder != null)
+            if (selectedFolder != null)
             {
                 // Clear out the old data if there is any
-                AllStories.Clear();
-                AllTags.Clear();
-                FilteredStories.Clear();
+                FilteredFiles.Clear();
                 FilteredTags.Clear();
+                SelectedProject = null;
+                Project projectRecord;
 
-                // Load in the new data from the selected folder
-                IReadOnlyList<StorageFile> storageFiles = await lastFolder.GetFilesAsync();
-                foreach (StorageFile storageFile in storageFiles)
+                // Look for an existing project file
+                StorageFile projectFile = (StorageFile)await selectedFolder.TryGetItemAsync(appData.DataStorageFileName);
+                if (projectFile == null)
                 {
-                    if (storageFile != null && storageFile.FileType == ".txt")
+                    projectRecord = new Project();
+                }
+                else
+                {
+                    string encodedData = await FileIO.ReadTextAsync(projectFile);
+                    projectRecord = System.Text.Json.JsonSerializer.Deserialize<Project>(encodedData);
+                }
+
+                // Get all the files in the folder
+                IReadOnlyList<StorageFile> files = await selectedFolder.GetFilesAsync();
+
+                // If we don't have a record for a file, create a new one
+                foreach (StorageFile file in files)
+                {
+                    if (file.Name != appData.DataStorageFileName && !projectRecord.AnnotatedFiles.Select(s => s.FilePath).Contains(file.Path))
                     {
-                        LoadStoryFromFile(storageFile);
+                        AnnotatedFile annotatedFile = new AnnotatedFile();
+                        annotatedFile.FilePath = file.Path;
+                        annotatedFile.DisplayName = file.DisplayName;
+                        annotatedFile.FileName = file.Name;
+                        projectRecord.AnnotatedFiles.Add(annotatedFile);
                     }
+                }
+
+                // Now let's check if anything has been deleted
+                foreach (AnnotatedFile annotatedFile in projectRecord.AnnotatedFiles)
+                {
+                    if(!files.Select(x => x.Path).Contains(annotatedFile.FilePath))
+                    {
+                        annotatedFile.IsPresent = false;
+                    }
+                }
+
+                // Select the project
+                SelectedProject = projectRecord;
+            }
+        }
+        public async void SaveProjectAsync()
+        {
+            if (SelectedProject != null && selectedFolder != null)
+            {
+                string encodedData = System.Text.Json.JsonSerializer.Serialize(SelectedProject);
+
+                StorageFile dataFile = await (selectedFolder).CreateFileAsync(appData.DataStorageFileName, CreationCollisionOption.OpenIfExists);
+                if (encodedData != null)
+                {
+                    await FileIO.WriteTextAsync(dataFile, encodedData);
                 }
             }
         }
-        public void OpenStoryFile()
+        public void OpenFile()
         {
-            if(SelectedStory != null && File.Exists(SelectedStory.FilePath) && SelectedStory.FilePath.Contains(".txt"))
+            if(SelectedFile != null && File.Exists(SelectedFile.FilePath))
             {
                 Process process = new Process();
                 process.StartInfo.UseShellExecute = true;
-                process.StartInfo.FileName = SelectedStory.FilePath;
+                process.StartInfo.FileName = SelectedFile.FilePath;
                 process.Start();
             }
         }
-        public void OpenStoryClick(object sender, RoutedEventArgs e)
+        public void OpenFileClick(object sender, RoutedEventArgs e)
         {
-            SelectedStory = (Story)(e.OriginalSource as FrameworkElement).DataContext;
-            OpenStoryFile();
+            SelectedFile = (AnnotatedFile)(e.OriginalSource as FrameworkElement).DataContext;
+            OpenFile(); 
         }
 
         #endregion
@@ -237,8 +247,9 @@ namespace TagBrowser.ViewModels
         #region Constructors
         public MainViewModel()
         {
-            LoadFromDirectoryCommand = new RelayCommand(LoadFromDirectoryPickerAsync);
-            ReloadFromDirectoryCommand = new RelayCommand(ReloadFromDirectory);
+            LoadWithPickerCommand = new RelayCommand(LoadFromDirectoryPickerAsync);
+            ReloadProjectCommand = new RelayCommand(LoadProjectAsync);
+            SaveProjectCommand = new RelayCommand(SaveProjectAsync);
         }
 
         #endregion

@@ -7,24 +7,38 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
+    
 
-    <Grid Background="{StaticResource RegionBrush}">
+    <Grid Background="{ThemeResource RegionBrush}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Grid.Resources>
+            <Flyout x:Key="projectFlyout">
+                <StackPanel>
+                    <MenuFlyoutItem Text="Open File" Click="{x:Bind ViewModel.OpenFileClick}"/>
+                </StackPanel>
+            </Flyout>
+        </Grid.Resources>
         <MenuBar Grid.Row="0">
             <MenuBar.Items>
                 <MenuBarItem Title="File">
-                    <MenuFlyoutItem Text="Load" Command="{x:Bind ViewModel.LoadFromDirectoryCommand}">
+                    <MenuFlyoutItem Text="Load" Command="{x:Bind ViewModel.LoadWithPickerCommand}">
                         <MenuFlyoutItem.KeyboardAccelerators>
                             <KeyboardAccelerator Modifiers="Control" Key="L"/>
                         </MenuFlyoutItem.KeyboardAccelerators>
                     </MenuFlyoutItem>
-                    <MenuFlyoutItem Text="Reload" Command="{x:Bind ViewModel.ReloadFromDirectoryCommand}" >
+                    <MenuFlyoutItem Text="Reload" Command="{x:Bind ViewModel.ReloadProjectCommand}" >
                         <MenuFlyoutItem.KeyboardAccelerators>
                             <KeyboardAccelerator Modifiers="Control" Key="R"/>
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Text="Save" Command="{x:Bind ViewModel.SaveProjectCommand}" >
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="S"/>
                         </MenuFlyoutItem.KeyboardAccelerators>
                     </MenuFlyoutItem>
                 </MenuBarItem>
@@ -52,26 +66,26 @@
                 </AutoSuggestBox.ItemTemplate>
             </AutoSuggestBox>
         </StackPanel>
-        <ListView Grid.Row="2" 
-                  ItemsSource="{x:Bind ViewModel.FilteredStories, Mode=OneWay}" 
-                  SelectedItem="{x:Bind ViewModel.SelectedStory, Mode=TwoWay}"
-                  DoubleTapped="{x:Bind ViewModel.OpenStoryFile}"
+        <ListView Grid.Row="2"
+                  ItemsSource="{x:Bind ViewModel.SelectedProject.ProjectTags, Mode=OneWay}">
+            
+        </ListView>
+        <ListView Grid.Row="3" 
+                  ItemsSource="{x:Bind ViewModel.FilteredFiles, Mode=OneWay}" 
+                  SelectedItem="{x:Bind ViewModel.SelectedFile, Mode=TwoWay}"
+                  DoubleTapped="{x:Bind ViewModel.OpenFile}"
                   BorderThickness="0"
                   x:Name="storyList">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="models:Story">
+                <DataTemplate x:DataType="models:AnnotatedFile">
                     <Grid Margin="10,10,10,0"
-                          BorderThickness="0,0,0,2">
-                        <Grid.ContextFlyout>
-                            <Flyout>
-                                <MenuFlyoutItem Text="Open Story" Click="MenuFlyoutItem_Click"/>
-                            </Flyout>
-                        </Grid.ContextFlyout>
+                          BorderThickness="0,0,0,2"
+                          ContextFlyout="{StaticResource projectFlyout}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind Name}" Margin="10,0,0,0"/>
+                        <TextBlock Grid.Row="0" Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind DisplayName}" Margin="10,0,0,0"/>
                         <ListView Grid.Row="1" SelectionMode="None" 
                                   ItemsSource="{x:Bind Tags}" 
                                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
