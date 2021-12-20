@@ -1,0 +1,132 @@
+﻿<Page
+    x:Class="TagBrowser.Views.FileListView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TagBrowser.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:models="using:TagBrowser.Models"
+    xmlns:converters="using:TagBrowser.ViewModels"
+    mc:Ignorable="d"
+    Background="{ThemeResource RegionBrush}">
+
+    <Page.Resources>
+        <converters:NullToBoolConverter x:Key="ntbConverter"/>
+        <converters:ObjectToStringConverter x:Key="otsConverter"/>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="4*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.Resources>
+            <MenuFlyout x:Key="projectFlyout">
+                <MenuFlyoutItem Text="Open File" Click="{x:Bind ViewModel.OpenFileClick}"/>
+                <MenuFlyoutItem Text="Manage Tags" Click="OpenTagManagementMenu_Click"/>
+            </MenuFlyout>
+            <Flyout x:Key="manageTagsFlyout" x:Name="manageTagsFlyout">
+                <StackPanel ScrollViewer.IsVerticalRailEnabled="True" ScrollViewer.VerticalScrollMode="Enabled">
+                    <ListView x:Name="tagSelectionList"
+                          Header="Select Tags" 
+                          ItemsSource="{x:Bind ViewModel.SelectedProject.ProjectTags, Mode=OneWay}" 
+                          IsItemClickEnabled="False"
+                          IsMultiSelectCheckBoxEnabled="True"
+                          SelectionMode="Multiple"/>
+                    <Button Content="Save Changes" Click="SaveTagChanges_Click"/>
+                </StackPanel>
+            </Flyout>
+        </Grid.Resources>
+        <StackPanel
+                    Grid.Column="0"
+                    Margin="10" 
+                    CornerRadius="2"
+                    BorderThickness="0,0,0,2">
+            <AutoSuggestBox PlaceholderText="Filter By Tag" 
+                        ItemsSource="{x:Bind ViewModel.FilteredTags, Mode=OneWay}"
+                        Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay}"
+                        TextChanged="{x:Bind ViewModel.TagTextChanged}"
+                        QuerySubmitted="{x:Bind ViewModel.TagQuerySubmitted}"
+                        SuggestionChosen="{x:Bind ViewModel.TagSuggestionChosen}"
+                        TextMemberPath="Name"
+                        HorizontalAlignment="Left"
+                        Width="300"
+                        Margin="5"
+                        BorderThickness="0">
+                <AutoSuggestBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:Tag">
+                        <TextBlock Text="{x:Bind Name}"/>
+                    </DataTemplate>
+                </AutoSuggestBox.ItemTemplate>
+            </AutoSuggestBox>
+            <ListView 
+                  ItemsSource="{x:Bind ViewModel.FilteredFiles, Mode=OneWay}" 
+                  SelectedItem="{x:Bind ViewModel.SelectedFile, Mode=TwoWay}"
+                  DoubleTapped="{x:Bind ViewModel.OpenFile}"
+                  BorderThickness="0"
+                  x:Name="fileList"
+                  ScrollViewer.VerticalScrollMode="Enabled"
+                  ScrollViewer.VerticalScrollBarVisibility="Visible">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:AnnotatedFile">
+                        <Grid Margin="10,10,10,0"
+                          BorderThickness="0,0,0,2"
+                          ContextFlyout="{StaticResource projectFlyout}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind DisplayName}" Margin="10,0,0,0"/>
+                            <ListView Grid.Row="1" SelectionMode="None" 
+                                  ItemsSource="{x:Bind Tags}" 
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollMode="Enabled"
+                                  BorderThickness="0,2,0,0">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Tag">
+                                        <TextBlock Text="{x:Bind Name}" Style="{StaticResource BodyTextBlockStyle}" FlyoutBase.AttachedFlyout="{StaticResource manageTagsFlyout}" />
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+        <Grid
+              Grid.Column="1"
+              Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*" MinHeight="200"/>
+                <RowDefinition Height="3*"/>
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0">
+                <TextBlock Text="File" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                <TextBlock Text="{x:Bind ViewModel.SelectedFile.DisplayName, Mode=OneWay}" Style="{StaticResource BodyTextBlockStyle}"/>
+            </StackPanel>
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Add Tags" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                <TextBlock Text="Enter a comma-separated list of values" 
+                           Style="{StaticResource CaptionTextBlockStyle}"/>
+                <TextBox x:Name="listNewTags" Text="{x:Bind ViewModel.TextTagList, Mode=TwoWay}" IsReadOnly="{x:Bind ViewModel.SelectedFile, Converter={StaticResource ntbConverter}, Mode=OneWay}"/>
+                <Button Content="Save Changes" Click="{x:Bind ViewModel.AddTagsFromStringList}" IsEnabled="{x:Bind ViewModel.SelectedFile, Converter={StaticResource ntbConverter}, ConverterParameter=Invert, Mode=OneWay}"/>
+            </StackPanel>
+            <StackPanel Grid.Row="2">
+                <TextBlock Text="Tags" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                <ListView ItemsSource="{x:Bind ViewModel.SelectedFile.Tags, Mode=OneWay}"/>
+            </StackPanel>
+            <TextBox Grid.Row="3" 
+                     Text="{x:Bind ViewModel.SelectedFile.Notes, Mode=OneWay}" 
+                     ScrollViewer.VerticalScrollBarVisibility="Visible" 
+                     ScrollViewer.VerticalScrollMode="Enabled"
+                     AcceptsReturn="True"/>
+        </Grid>
+    </Grid>
+</Page>

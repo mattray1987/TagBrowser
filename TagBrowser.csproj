@@ -21,6 +21,9 @@
     <AppxBundlePlatforms>x86|x64</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Views\FileListView.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -50,6 +53,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Views\" />
+    <Page Update="Views\FileListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>

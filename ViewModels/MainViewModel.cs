@@ -27,6 +27,7 @@ namespace TagBrowser.ViewModels
         private Tag selectedTag;
         private AnnotatedFile selectedFile;
         private ObservableCollection<Project> projectFolders = new();
+        private string textTagsList;
         private StorageFolder selectedFolder { get; set; }
 
         #endregion
@@ -36,12 +37,13 @@ namespace TagBrowser.ViewModels
         public Project SelectedProject { 
             get { return selectedProject; } 
             set 
-            { 
-                SetProperty(ref selectedProject, value); 
+            {
+                SetProperty(ref selectedProject, value);
                 FilterFilesByTag();
                 FilterTags();
             } 
         }
+        public Page SelectedPage { get; set; }
         public ObservableCollection<AnnotatedFile> FilteredFiles
         {
             get => filteredFiles;
@@ -84,7 +86,13 @@ namespace TagBrowser.ViewModels
             set
             {
                 SetProperty(ref selectedFile, value);
+                TextTagList = null;
             }
+        }
+        public string TextTagList 
+        { 
+            get => textTagsList;
+            set { SetProperty(ref textTagsList, value); }
         }
 
         #endregion
@@ -107,10 +115,14 @@ namespace TagBrowser.ViewModels
             {
                 FilterTags();
             }
+            else if(e.Reason == AutoSuggestionBoxTextChangeReason.SuggestionChosen)
+            {
+                SelectedTag = SelectedProject.ProjectTags.FirstOrDefault(s => s.Name.Equals(SearchTerm, StringComparison.OrdinalIgnoreCase));
+            }
         }
-        public void TagSuggestionChosen() 
+        public void TagSuggestionChosen(object sender, AutoSuggestBoxSuggestionChosenEventArgs e) 
         {
-            
+
         }
         private void FilterFilesByTag() 
         {
@@ -121,7 +133,7 @@ namespace TagBrowser.ViewModels
                 {
                     foreach(AnnotatedFile file in SelectedProject.AnnotatedFiles)
                     {
-                        if (file.ContainsTag(SelectedTag))
+                        if (file.Tags.Contains(SelectedTag))
                         {
                             FilteredFiles.Add(file);
                         }
@@ -139,7 +151,7 @@ namespace TagBrowser.ViewModels
         private void FilterTags()
         {
             FilteredTags.Clear();
-            if(SelectedProject != null && SelectedProject.ProjectTags != null)
+            if(SelectedProject != null && SelectedProject.ProjectTags != null && searchTerm != null)
             {
                 foreach (Tag tag in SelectedProject.ProjectTags)
                 {
@@ -240,6 +252,28 @@ namespace TagBrowser.ViewModels
         {
             SelectedFile = (AnnotatedFile)(e.OriginalSource as FrameworkElement).DataContext;
             OpenFile(); 
+        }
+        public void AddTagsFromStringList()
+        {
+            if (!string.IsNullOrWhiteSpace(TextTagList) && SelectedProject != null && SelectedFile != null)
+            {
+                string inputText = TextTagList;
+                List<string> textTags = inputText.Split(',').Select(s => s.Trim()).ToList();
+                foreach (string tagString in textTags)
+                {
+                    Tag tag = SelectedProject.ProjectTags.FirstOrDefault(s => s.Name.ToUpper() == tagString.ToUpper());
+                    if (tag == null)
+                    {
+                        tag = new Tag(tagString.ToUpper());
+                        SelectedProject.ProjectTags.Add(tag);
+                    }
+                    if (!SelectedFile.Tags.Contains(tag))
+                    {
+                        SelectedFile.Tags.Add(tag);
+                    }
+                }
+                TextTagList = null;
+            }
         }
 
         #endregion

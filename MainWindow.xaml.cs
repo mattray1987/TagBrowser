@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using TagBrowser.Models;
 using TagBrowser.Utilities;
 using TagBrowser.ViewModels;
+using TagBrowser.Views;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
@@ -36,6 +37,7 @@ namespace TagBrowser
         public MainWindow()
         {
             this.InitializeComponent();
+            mainContentFrame.Content = new FileListView();
         }
         MainViewModel ViewModel => (Application.Current as App).ViewModel;
     }
