@@ -43,6 +43,7 @@ namespace TagBrowser.Views
                     tagSelectionList.SelectedItems.Add(tag);
                 }
             }
+            FlyoutShowOptions options = new FlyoutShowOptions();
             manageTagsFlyout.ShowAt(fileList);
         }
 
@@ -65,6 +66,11 @@ namespace TagBrowser.Views
                 ViewModel.TextTagList = (sender as TextBox).Text;
                 ViewModel.AddTagsFromStringList();
             }
+        }
+
+        private void ListView_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            fileList.SelectedItem = (sender as FrameworkElement).DataContext;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -30,24 +31,26 @@ namespace TagBrowser.Models
         public bool IsPresent { get; set; }
         [JsonInclude]
         public ObservableCollection<Tag> Tags = new();
-        public string TagsString 
+        public string TagsString
         {
-            get 
+            get
             {
-                if (Tags.Count > 0)
+                string tempString = "";
+                if(Tags.Count > 0)
                 {
-                    string tempString = "";
                     foreach (Tag tag in Tags)
                     {
                         tempString += tag.Name + ", ";
                     }
                     tempString = tempString.Remove(tempString.Length - 2);
-                    return tempString;
                 }
-                return "";
+                return tempString;
             }
         }
-
+        public void RaiseTagsStringChanged()
+        {
+            OnPropertyChanged(nameof(TagsString));
+        }
         internal bool ContainsTag(Tag tag)
         {
             foreach(Tag existingTag in Tags)
@@ -59,10 +62,5 @@ namespace TagBrowser.Models
             }
             return false;
         }
-        public AnnotatedFile()
-        {
-            Tags.CollectionChanged += (o,e) => OnPropertyChanged(nameof(TagsString));
-        }
-
     }
 }

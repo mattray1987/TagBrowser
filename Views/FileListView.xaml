@@ -29,17 +29,27 @@
                 <MenuFlyoutItem Text="Open File" Click="{x:Bind ViewModel.OpenFileClick}"/>
                 <MenuFlyoutItem Text="Manage Tags" Click="OpenTagManagementMenu_Click"/>
             </MenuFlyout>
-            <Flyout x:Key="manageTagsFlyout" x:Name="manageTagsFlyout">
-                <StackPanel ScrollViewer.IsVerticalRailEnabled="True" ScrollViewer.VerticalScrollMode="Enabled">
+            <Flyout x:Key="manageTagsFlyout" x:Name="manageTagsFlyout" ShowMode="Standard" Placement="Full">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
                     <ListView x:Name="tagSelectionList"
-                          Header="Select Tags" 
-                          ItemsSource="{x:Bind ViewModel.SelectedProject.ProjectTags, Mode=OneWay}" 
-                          IsItemClickEnabled="False"
-                          IsMultiSelectCheckBoxEnabled="True"
-                          SelectionMode="Multiple"/>
-                    <Button Content="Save Changes" Click="SaveTagChanges_Click"/>
-                </StackPanel>
+                              Grid.Row="0"
+                              Header="Select Tags" 
+                              ItemsSource="{x:Bind ViewModel.SelectedProject.ProjectTags, Mode=OneWay}" 
+                              IsItemClickEnabled="False"
+                              IsMultiSelectCheckBoxEnabled="True"
+                              SelectionMode="Multiple"/>
+                    <Button Content="Save Changes" 
+                            Click="SaveTagChanges_Click"
+                            Grid.Row="1"/>
+                </Grid>
             </Flyout>
+            <MenuFlyout x:Key="removeTagFlyout" x:Name="removeTagFlyout">
+                <MenuFlyoutItem Text="Remove Tag" Click="{x:Bind ViewModel.RemoveTagClick}"/>
+            </MenuFlyout>
         </Grid.Resources>
         <AutoSuggestBox
             Grid.Row="0"
@@ -82,7 +92,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Style="{StaticResource BodyTextBlockStyle}" Text="{x:Bind ShortName}" Margin="0"/>
-                        <TextBlock Grid.Row="1" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind TagsString, Mode=OneWay}" />
+                        <TextBlock Grid.Row="1" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind TagsString, Mode=OneWay}"/>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -115,7 +125,13 @@
             </StackPanel>
             <StackPanel Grid.Row="2">
                 <TextBlock Text="Tags" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                <ListView ItemsSource="{x:Bind ViewModel.SelectedFile.Tags, Mode=OneWay}"/>
+                <ListView ItemsSource="{x:Bind ViewModel.SelectedFile.Tags, Mode=OneWay}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Tag">
+                            <TextBlock Text="{x:Bind Name}" ContextFlyout="{StaticResource removeTagFlyout}"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
             </StackPanel>
             <TextBox Grid.Row="3" 
                      Text="{x:Bind ViewModel.SelectedFile.Notes, Mode=OneWay}" 

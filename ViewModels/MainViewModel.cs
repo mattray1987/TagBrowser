@@ -3,6 +3,8 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -87,8 +89,10 @@ namespace TagBrowser.ViewModels
             {
                 SetProperty(ref selectedFile, value);
                 TextTagList = null;
+                SelectedFile.Tags.CollectionChanged += (s, e) => SelectedFile.RaiseTagsStringChanged();
             }
         }
+
         public string TextTagList 
         { 
             get => textTagsList;
@@ -173,7 +177,6 @@ namespace TagBrowser.ViewModels
                 LoadProjectAsync();
             }
         }
-
         private async void LoadProjectAsync()
         {
             if (selectedFolder != null)
@@ -273,6 +276,13 @@ namespace TagBrowser.ViewModels
                     }
                 }
                 TextTagList = null;
+            }
+        }
+        public void RemoveTagClick(object sender, RoutedEventArgs e)
+        {
+            if(SelectedFile != null)
+            {
+                SelectedFile.Tags.Remove((e.OriginalSource as FrameworkElement).DataContext as Tag);
             }
         }
 
