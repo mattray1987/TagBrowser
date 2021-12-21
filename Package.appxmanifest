@@ -9,7 +9,7 @@
   <Identity
     Name="83ba2a1b-8959-41df-9b8f-e6f35a36a1c5"
     Publisher="CN=BirdTech"
-    Version="1.0.0.0" />
+    Version="1.0.1.0" />
 
   <Properties>
     <DisplayName>TagBrowser</DisplayName>

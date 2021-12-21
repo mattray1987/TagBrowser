@@ -33,14 +33,6 @@
                         </MenuFlyoutItem.KeyboardAccelerators>
                     </MenuFlyoutItem>
                 </MenuBarItem>
-                <MenuBarItem Title="Tags">
-                    <MenuFlyoutItem Text="Create Tags"/>
-                    <MenuFlyoutItem Text="Delete Tags"/>
-                </MenuBarItem>
-                <MenuBarItem Title="View">
-                    <MenuFlyoutItem Text="File List View"/>
-                    <MenuFlyoutItem Text="Tag Tree View"/>
-                </MenuBarItem>
             </MenuBar.Items>
         </MenuBar>
         <Frame Grid.Row="1" x:Name="mainContentFrame"/>
