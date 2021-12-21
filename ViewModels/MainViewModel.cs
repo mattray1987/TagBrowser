@@ -89,7 +89,10 @@ namespace TagBrowser.ViewModels
             {
                 SetProperty(ref selectedFile, value);
                 TextTagList = null;
-                SelectedFile.Tags.CollectionChanged += (s, e) => SelectedFile.RaiseTagsStringChanged();
+                if(SelectedFile != null)
+                {
+                    SelectedFile.Tags.CollectionChanged += (s, e) => SelectedFile.RaiseTagsStringChanged();
+                } 
             }
         }
 

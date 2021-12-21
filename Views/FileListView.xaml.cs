@@ -34,13 +34,16 @@ namespace TagBrowser.Views
 
         private void OpenTagManagementMenu_Click(object sender, RoutedEventArgs e)
         {
-            fileList.SelectedItem = ((FrameworkElement)e.OriginalSource).DataContext;
+            ViewModel.SelectedFile = (AnnotatedFile)((FrameworkElement)e.OriginalSource).DataContext;
             tagSelectionList.SelectedItems.Clear();
             if(ViewModel.SelectedFile != null)
             {
-               foreach(Tag tag in ViewModel.SelectedFile.Tags)
+               foreach(Tag tag in tagSelectionList.Items)
                 {
-                    tagSelectionList.SelectedItems.Add(tag);
+                    if (ViewModel.SelectedFile.ContainsTag(tag))
+                    {
+                        tagSelectionList.SelectedItems.Add(tag);
+                    }
                 }
             }
             FlyoutShowOptions options = new FlyoutShowOptions();
@@ -70,7 +73,7 @@ namespace TagBrowser.Views
 
         private void ListView_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            fileList.SelectedItem = (sender as FrameworkElement).DataContext;
+            ViewModel.SelectedFile = (AnnotatedFile)(sender as FrameworkElement).DataContext;
         }
     }
 }
