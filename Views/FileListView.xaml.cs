@@ -57,5 +57,14 @@ namespace TagBrowser.Views
                 }
             }
         }
+
+        private void listNewTags_KeyUp(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                ViewModel.TextTagList = (sender as TextBox).Text;
+                ViewModel.AddTagsFromStringList();
+            }
+        }
     }
 }

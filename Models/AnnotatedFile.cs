@@ -11,6 +11,18 @@ namespace TagBrowser.Models
 {
     public class AnnotatedFile : BindableBase
     {
+        public string ShortName
+        { 
+            get 
+            { 
+                if (DisplayName.Length > 20)
+                {
+                    return DisplayName.Substring(0,20) + "...";
+                }
+                return DisplayName;
+            } 
+        }
+
         public string DisplayName { get; set; }
         public string FileName { get; set; }
         public string FilePath { get; set; }
@@ -18,6 +30,23 @@ namespace TagBrowser.Models
         public bool IsPresent { get; set; }
         [JsonInclude]
         public ObservableCollection<Tag> Tags = new();
+        public string TagsString 
+        {
+            get 
+            {
+                if (Tags.Count > 0)
+                {
+                    string tempString = "";
+                    foreach (Tag tag in Tags)
+                    {
+                        tempString += tag.Name + ", ";
+                    }
+                    tempString = tempString.Remove(tempString.Length - 2);
+                    return tempString;
+                }
+                return "";
+            }
+        }
 
         internal bool ContainsTag(Tag tag)
         {
@@ -30,5 +59,10 @@ namespace TagBrowser.Models
             }
             return false;
         }
+        public AnnotatedFile()
+        {
+            Tags.CollectionChanged += (o,e) => OnPropertyChanged(nameof(TagsString));
+        }
+
     }
 }
